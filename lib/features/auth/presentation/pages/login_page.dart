@@ -121,14 +121,7 @@ class LoginPage extends HookConsumerWidget{
 
               // Button de connexion
               FilledButton(
-                onPressed: () {
-                  if(formKey.currentState!.validate()) {
-                    // TODO: Appel a la logique de connexion supabase
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      const SnackBar(content: Text("Tentative de connexion !"))
-                    );
-                  }
-                }, 
+                onPressed: isLoading.value ? null : _login, 
                 style: FilledButton.styleFrom(
                   padding: const EdgeInsets.symmetric(vertical: 16)
                 ),

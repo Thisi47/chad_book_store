@@ -40,7 +40,7 @@ class ProductDetailsPage extends ConsumerWidget {
                     decoration: BoxDecoration(
                       boxShadow: [
                         BoxShadow(
-                          color: Colors.black.withOpacity(0.2),
+                          color: Colors.black.withValues(alpha: 0.2),
                           blurRadius: 20,
                           offset: const Offset(0, 10),
                         ),
@@ -68,7 +68,7 @@ class ProductDetailsPage extends ConsumerWidget {
                     children: [
                       Chip(
                         label: Text(book.category ?? 'Général'),
-                        backgroundColor: Theme.of(context).primaryColor.withOpacity(0.1),
+                        backgroundColor: Theme.of(context).primaryColor.withValues(alpha: 0.1),
                         labelStyle: TextStyle(color: Theme.of(context).primaryColor),
                         padding: EdgeInsets.zero,
                       ),
@@ -140,7 +140,7 @@ class ProductDetailsPage extends ConsumerWidget {
           color: Colors.white,
           boxShadow: [
             BoxShadow(
-              color: Colors.black.withOpacity(0.05),
+              color: Colors.black.withValues(alpha: 0.05),
               blurRadius: 10,
               offset: const Offset(0, -5),
             ),

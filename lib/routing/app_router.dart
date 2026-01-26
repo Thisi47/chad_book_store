@@ -5,9 +5,9 @@ import 'package:chad_book_store/features/auth/presentation/pages/login_page.dart
 import 'package:chad_book_store/features/auth/data/auth_state_provider.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
-import 'package:chad_book_store/features/products/domain/book.dart'; // Import Book
-import 'package:chad_book_store/features/products/presentation/pages/product_details_page.dart'; // Import Page
-
+import 'package:chad_book_store/features/products/domain/book.dart';
+import 'package:chad_book_store/features/products/presentation/pages/product_details_page.dart';
+import 'package:chad_book_store/features/cart/presentation/pages/cart_page.dart';
 
 
 
@@ -38,6 +38,11 @@ final routerProvider = Provider<GoRouter>((ref) {
           final book = state.extra as Book; 
           return ProductDetailsPage(book: book);
         },
+      ),
+
+      GoRoute(
+        path: '/cart',
+        builder: (context, state) => const CartPage(),
       ),
   ],
 

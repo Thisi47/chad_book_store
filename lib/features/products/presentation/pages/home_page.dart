@@ -29,7 +29,7 @@ class HomePage extends ConsumerWidget {
                   IconButton(
                     icon: const Icon(Icons.shopping_cart_outlined),
                     onPressed: () {
-                      // TODO: Aller à la page Panier
+                      context.push('/cart');
                     },
                   ),
                   if (count > 0)

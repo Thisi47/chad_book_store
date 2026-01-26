@@ -5,6 +5,10 @@ import 'package:chad_book_store/features/auth/presentation/pages/login_page.dart
 import 'package:chad_book_store/features/auth/data/auth_state_provider.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
+import 'package:chad_book_store/features/products/domain/book.dart'; // Import Book
+import 'package:chad_book_store/features/products/presentation/pages/product_details_page.dart'; // Import Page
+
+
 
 
 // On définit le routeur comme une variable globale pour l'instant
@@ -25,7 +29,16 @@ final routerProvider = Provider<GoRouter>((ref) {
       GoRoute(
         path: '/home',
         builder: (context, state) => const HomePage()
-      )
+      ),
+
+      GoRoute(
+        path: '/details',
+        builder: (context, state) {
+          // On récupère l'objet livre passé en paramètre "extra"
+          final book = state.extra as Book; 
+          return ProductDetailsPage(book: book);
+        },
+      ),
   ],
 
   redirect: (context, state) {

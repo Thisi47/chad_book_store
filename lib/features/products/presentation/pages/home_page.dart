@@ -6,6 +6,8 @@ import 'package:chad_book_store/features/products/presentation/widgets/book_card
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import 'package:chad_book_store/core/constants/app_constants.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
 
 class HomePage extends ConsumerWidget {
   const HomePage({super.key});
@@ -17,7 +19,7 @@ class HomePage extends ConsumerWidget {
 
     return Scaffold(
       appBar: AppBar(
-        title: const Text("Chad Book Store"),
+        title: Text(AppConstants.appName),
         actions: [
           Consumer(
             builder: (context, ref, child) {
@@ -64,6 +66,40 @@ class HomePage extends ConsumerWidget {
             },
           ),
         ],
+      ),
+
+      drawer: Drawer(
+        child: ListView(
+          padding: EdgeInsets.zero,
+          children: [
+            UserAccountsDrawerHeader(
+              decoration: BoxDecoration(color: Theme.of(context).primaryColor),
+              accountName: const Text("Client ${AppConstants.appName}"),
+              accountEmail: Text(Supabase.instance.client.auth.currentUser?.email ?? ""),
+              currentAccountPicture: const CircleAvatar(
+                backgroundColor: Colors.white,
+                child: Icon(Icons.person, size: 40, color: Colors.grey),
+              ),
+            ),
+            ListTile(
+              leading: const Icon(Icons.history),
+              title: const Text('Mes Commandes'),
+              onTap: () {
+                context.pop(); // Ferme le menu
+                context.push('/orders'); // Va vers la page
+              },
+            ),
+            const Divider(),
+            ListTile(
+              leading: const Icon(Icons.logout, color: Colors.red),
+              title: const Text('Se déconnecter', style: TextStyle(color: Colors.red)),
+              onTap: () async {
+                await ref.read(authRepositoryProvider).signOut();
+                if (context.mounted) context.go('/login');
+              },
+            ),
+          ],
+        ),
       ),
       // FutureBuilder : La façon la plus simple de charger une donnée unique au démarrage
       body: FutureBuilder<List<Book>>(

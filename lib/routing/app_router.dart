@@ -9,6 +9,8 @@ import 'package:chad_book_store/features/products/domain/book.dart';
 import 'package:chad_book_store/features/products/presentation/pages/product_details_page.dart';
 import 'package:chad_book_store/features/cart/presentation/pages/cart_page.dart';
 
+import '../features/cart/presentation/pages/orders_page.dart';
+
 
 
 // On définit le routeur comme une variable globale pour l'instant
@@ -43,6 +45,11 @@ final routerProvider = Provider<GoRouter>((ref) {
       GoRoute(
         path: '/cart',
         builder: (context, state) => const CartPage(),
+      ),
+
+      GoRoute(
+        path: '/orders',
+        builder: (context, state) => const OrdersPage(),
       ),
   ],
 

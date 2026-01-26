@@ -1,5 +1,7 @@
+import 'package:chad_book_store/features/auth/data/auth_repository.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_hooks/flutter_hooks.dart';
+import 'package:go_router/go_router.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
 // import 'package:go_router/go_router.dart';
 
@@ -17,6 +19,38 @@ class LoginPage extends HookConsumerWidget{
 
     // Pour cacher / afficher le mot de passe
     final isPasswordVisible = useState(false);
+
+    final isLoading = useState(false);
+
+    // Fonction de connexion isolée pour la clarté
+    Future<void> _login() async{
+      if(!formKey.currentState!.validate()) return;
+
+      isLoading.value = true;
+
+      try {
+        await ref.read(authRepositoryProvider).signIn(
+          email: emailController.text.trim(), 
+          password: passwordController.text.trim());
+
+          if(context.mounted) {
+            context.go("/home");
+          }
+      } catch (e) {
+        if(context.mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text(e.toString().replaceAll("Exception:", "").trim()), 
+              backgroundColor: Colors.red,
+            ),
+            
+          );
+        }
+      } finally {
+        if(context.mounted) isLoading.value = false;
+      }
+ 
+     }
 
     return Scaffold(
       body: Center(
@@ -98,7 +132,14 @@ class LoginPage extends HookConsumerWidget{
                 style: FilledButton.styleFrom(
                   padding: const EdgeInsets.symmetric(vertical: 16)
                 ),
-                child: const Text("Se connecter")
+                child: isLoading.value 
+                ? const SizedBox(
+                  height: 20, 
+                  width: 20, 
+                  child: CircularProgressIndicator(color: Colors.white, strokeWidth: 2,)
+                  )
+                : 
+                const Text("Se connecter")
               )
             ],
           ),

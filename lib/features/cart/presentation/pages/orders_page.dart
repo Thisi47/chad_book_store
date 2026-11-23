@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:chad_book_store/features/cart/data/order_repository.dart';
 import 'package:chad_book_store/features/cart/domain/order.dart';
+import 'package:go_router/go_router.dart';
 
 // 1. DÉFINITION DU PROVIDER (C'est ici la correction !)
 // On le définit en dehors de la classe pour qu'il soit accessible
@@ -19,7 +20,16 @@ class OrdersPage extends ConsumerWidget {
     final ordersAsyncValue = ref.watch(ordersProvider);
 
     return Scaffold(
-      appBar: AppBar(title: const Text("Mes Commandes")),
+      appBar: AppBar(
+        title: const Text("Mes Commandes"),
+        actions: [
+          IconButton(
+            tooltip: 'Ma bibliothèque',
+            onPressed: () => context.push('/library'),
+            icon: const Icon(Icons.menu_book_outlined),
+          ),
+        ],
+      ),
       // 3. GESTION DES ÉTATS (Chargement / Erreur / Données)
       body: ordersAsyncValue.when(
         data: (orders) {
@@ -61,7 +71,8 @@ class _OrderCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final dateStr = "${order.createdAt.day}/${order.createdAt.month}/${order.createdAt.year}";
+    final dateStr =
+        "${order.createdAt.day}/${order.createdAt.month}/${order.createdAt.year}";
 
     return Card(
       margin: const EdgeInsets.only(bottom: 12),
@@ -70,10 +81,13 @@ class _OrderCard extends StatelessWidget {
         leading: Container(
           padding: const EdgeInsets.all(10),
           decoration: BoxDecoration(
-            color: Theme.of(context).primaryColor.withOpacity(0.1),
+            color: Theme.of(context).primaryColor.withValues(alpha: 0.1),
             shape: BoxShape.circle,
           ),
-          child: Icon(Icons.receipt_long, color: Theme.of(context).primaryColor),
+          child: Icon(
+            Icons.receipt_long,
+            color: Theme.of(context).primaryColor,
+          ),
         ),
         title: Text(
           "${order.totalPrice} FCFA",
@@ -83,13 +97,17 @@ class _OrderCard extends StatelessWidget {
         trailing: Container(
           padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
           decoration: BoxDecoration(
-            color: order.status == 'en_attente' ? Colors.orange[100] : Colors.green[100],
+            color: order.status == 'en_attente'
+                ? Colors.orange[100]
+                : Colors.green[100],
             borderRadius: BorderRadius.circular(20),
           ),
           child: Text(
             order.status.toUpperCase(),
             style: TextStyle(
-              color: order.status == 'en_attente' ? Colors.orange[800] : Colors.green[800],
+              color: order.status == 'en_attente'
+                  ? Colors.orange[800]
+                  : Colors.green[800],
               fontWeight: FontWeight.bold,
               fontSize: 12,
             ),

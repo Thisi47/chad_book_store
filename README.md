@@ -55,3 +55,63 @@ lib/
 │   └── cart/            # Panier & Commandes
 ├── routing/             # Configuration des routes (GoRouter)
 └── main.dart            # Point d'entrée & Injection de dépendances
+```
+
+## Catalogue, favoris, commandes et profil
+
+Le catalogue et les détails des livres sont accessibles sans compte. La
+connexion reste nécessaire pour commander, consulter l’historique, lire les
+livres achetés, enregistrer des favoris et modifier son profil. Les favoris et
+les champs du profil sont enregistrés dans les métadonnées du compte Supabase.
+Les avatars sont stockés dans le bucket public `avatars`.
+
+Pour activer la bibliothèque et la lecture, appliquez
+[`supabase/migrations/20261123160000_restore_user_features.sql`](./supabase/migrations/20261123160000_restore_user_features.sql)
+au projet Supabase. Dans le bucket privé `book-files`, téléversez chaque PDF et
+renseignez son chemin dans `books.reading_path` (par exemple
+`<id-du-livre>/livre.pdf`). La lecture génère une URL signée uniquement après
+avoir vérifié que le compte a commandé le livre. Le total est recalculé côté
+Postgres lors de la commande. Les commandes antérieures à la migration ne
+contiennent pas les livres achetés et ne peuvent donc pas être ajoutées
+automatiquement à la bibliothèque.
+
+## Récupération du mot de passe
+
+Dans le tableau de bord Supabase, ajoutez les URL de redirection utilisées à
+**Authentication → URL Configuration → Redirect URLs**. Pour le mobile :
+
+```text
+chadbookstore://login-callback/
+```
+
+Pour Flutter Web, autorisez aussi l'URL `http://localhost:3000/login-callback`
+en développement (adaptez le port si nécessaire), ainsi que l'URL équivalente
+de votre site en production. La redirection Web utilise automatiquement
+l'origine courante. Configurez également le **Site URL** Supabase avec l'URL
+publique de votre application, et non `localhost`, en production.
+
+Le modèle d'e-mail de récupération doit utiliser le lien de confirmation
+Supabase (`{{ .ConfirmationURL }}`). Après ouverture du lien, l'application
+permet de définir un nouveau mot de passe.
+
+La création de compte est accessible depuis l'écran de connexion. Si la
+confirmation d'e-mail est activée dans Supabase, la personne doit confirmer
+son adresse avant sa première connexion.
+
+## Connexion avec Google
+
+Le bouton Google utilise le fournisseur OAuth configuré dans Supabase et
+ramène l'utilisateur dans l'application via `chadbookstore://login-callback/`.
+Google ouvre son écran de connexion dans le navigateur sécurisé du système
+(Google interdit les WebViews intégrées pour cette authentification), puis
+l'application reprend automatiquement la session.
+
+Dans Google Cloud, l'URI de redirection autorisée du client Web doit être
+`https://snjufojacjsxoyugkmou.supabase.co/auth/v1/callback`. Dans Supabase,
+activez le fournisseur Google avec le client ID Web et son secret. Le callback
+`chadbookstore://login-callback/` doit également figurer dans **Redirect URLs**.
+
+Le service d'e-mail intégré de Supabase est limité (actuellement 2 e-mails
+d'authentification par heure pour le projet). Pour les tests répétés ou la
+production, configurez un SMTP personnalisé dans **Authentication → SMTP
+Settings** et consultez les [limites Auth Supabase](https://supabase.com/docs/guides/auth/rate-limits).

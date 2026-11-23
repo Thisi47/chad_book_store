@@ -6,6 +6,7 @@ class Book {
   final String? coverUrl;
   final String? description;
   final String? category;
+  final String? readingPath;
 
   Book({
     required this.id,
@@ -15,6 +16,7 @@ class Book {
     this.coverUrl,
     this.description,
     this.category,
+    this.readingPath,
   });
 
   // Conversion manuelle : On prend le JSON de Supabase et on remplit l'objet
@@ -27,6 +29,7 @@ class Book {
       coverUrl: json['cover_url'] as String?,
       description: json['description'] as String?,
       category: json['category'] as String?,
+      readingPath: json['reading_path'] as String?,
     );
   }
 }

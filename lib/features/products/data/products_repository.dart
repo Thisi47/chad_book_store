@@ -30,4 +30,19 @@ class ProductsRepository {
       throw Exception('Erreur chargement livres: $e');
     }
   }
+
+  Future<List<Book>> getBooksByIds(Iterable<String> ids) async {
+    final bookIds = ids.toSet().toList();
+    if (bookIds.isEmpty) return [];
+
+    final response = await _client
+        .from('books')
+        .select()
+        .inFilter('id', bookIds)
+        .order('title', ascending: true);
+
+    return (response as List<dynamic>)
+        .map((json) => Book.fromJson(json))
+        .toList();
+  }
 }

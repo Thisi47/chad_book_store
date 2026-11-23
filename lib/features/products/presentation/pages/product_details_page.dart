@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:chad_book_store/features/products/domain/book.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:chad_book_store/features/cart/presentation/cart_provider.dart';
+import 'package:chad_book_store/features/favorites/presentation/widgets/favorite_button.dart';
+import 'package:chad_book_store/core/widgets/app_feedback.dart';
 import 'package:go_router/go_router.dart';
 
 class ProductDetailsPage extends ConsumerWidget {
@@ -12,12 +14,15 @@ class ProductDetailsPage extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     return Scaffold(
-      backgroundColor: Colors.white, // Fond pur
+      backgroundColor: Theme.of(context).colorScheme.surface,
       // AppBar transparente pour laisser la place à l'image
       appBar: AppBar(
         backgroundColor: Colors.transparent,
         elevation: 0,
-        iconTheme: const IconThemeData(color: Colors.black), // Flèche retour noire
+        iconTheme: IconThemeData(
+          color: Theme.of(context).colorScheme.onSurface,
+        ),
+        actions: [FavoriteButton(bookId: book.id)],
       ),
       extendBodyBehindAppBar: true, // L'image passe SOUS la barre d'état
 
@@ -29,12 +34,15 @@ class ProductDetailsPage extends ConsumerWidget {
               height: 350,
               width: double.infinity,
               decoration: BoxDecoration(
-                color: Colors.grey[100], // Fond gris très clair derrière le livre
-                borderRadius: const BorderRadius.vertical(bottom: Radius.circular(32)),
+                color: Theme.of(context).colorScheme.surfaceContainerHighest,
+                borderRadius: const BorderRadius.vertical(
+                  bottom: Radius.circular(32),
+                ),
               ),
               child: Center(
                 child: Hero(
-                  tag: 'book-cover-${book.id}', // Même tag que sur la Home Page !
+                  tag:
+                      'book-cover-${book.id}', // Même tag que sur la Home Page !
                   child: Container(
                     height: 250,
                     decoration: BoxDecoration(
@@ -64,17 +72,24 @@ class ProductDetailsPage extends ConsumerWidget {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   // Auteur et Catégorie
-                  Row(
+                  Wrap(
+                    spacing: 8,
+                    runSpacing: 4,
+                    crossAxisAlignment: WrapCrossAlignment.center,
                     children: [
                       Chip(
                         label: Text(book.category ?? 'Général'),
-                        backgroundColor: Theme.of(context).primaryColor.withValues(alpha: 0.1),
-                        labelStyle: TextStyle(color: Theme.of(context).primaryColor),
+                        backgroundColor: Theme.of(
+                          context,
+                        ).primaryColor.withValues(alpha: 0.1),
+                        labelStyle: TextStyle(
+                          color: Theme.of(context).primaryColor,
+                        ),
                         padding: EdgeInsets.zero,
                       ),
-                      const Spacer(),
                       Text(
                         book.author,
+                        softWrap: true,
                         style: TextStyle(
                           fontSize: 16,
                           color: Colors.grey[600],
@@ -135,7 +150,7 @@ class ProductDetailsPage extends ConsumerWidget {
 
       // 3. Barre d'action fixe en bas (Sticky Bottom Bar)
       bottomNavigationBar: Container(
-        padding: const EdgeInsets.all(20),
+        padding: const EdgeInsets.fromLTRB(16, 12, 16, 12),
         decoration: BoxDecoration(
           color: Colors.white,
           boxShadow: [
@@ -154,34 +169,36 @@ class ProductDetailsPage extends ConsumerWidget {
               ref.read(cartProvider.notifier).addItem(book);
 
               // 2. Feedback visuel (SnackBar)
-              ScaffoldMessenger.of(context).hideCurrentSnackBar();
-              ScaffoldMessenger.of(context).showSnackBar(
-                SnackBar(
-                  content: Text("${book.title} ajouté au panier !"),
-                  behavior: SnackBarBehavior.floating,
-                  action: SnackBarAction(
-                    label: 'VOIR PANIER',
-                    onPressed: () {
-                      // TODO: Naviguer vers la page panier (étape suivante)
-                    },
-                  ),
+              showAppMessage(
+                context,
+                '${book.title} ajouté au panier.',
+                action: SnackBarAction(
+                  label: 'Voir le panier',
+                  onPressed: () => context.push('/cart'),
                 ),
               );
-
-              // Optionnel : Retourner en arrière automatiquement
-              context.pop();
             },
             style: FilledButton.styleFrom(
               padding: const EdgeInsets.symmetric(vertical: 18),
-              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-              backgroundColor: const Color(0xFF00695C), // Vert Tchad Books
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(16),
+              ),
+              backgroundColor: Theme.of(context).colorScheme.primary,
             ),
             child: const Row(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
                 Icon(Icons.shopping_bag_outlined),
                 SizedBox(width: 10),
-                Text("Ajouter au panier", style: TextStyle(fontSize: 18)),
+                Flexible(
+                  child: Text(
+                    "Ajouter au panier",
+                    maxLines: 2,
+                    textAlign: TextAlign.center,
+                    overflow: TextOverflow.ellipsis,
+                    style: TextStyle(fontSize: 18),
+                  ),
+                ),
               ],
             ),
           ),

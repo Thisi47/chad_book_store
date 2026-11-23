@@ -1,87 +1,95 @@
-import 'package:flutter/material.dart';
+import 'package:chad_book_store/features/favorites/presentation/widgets/favorite_button.dart';
 import 'package:chad_book_store/features/products/domain/book.dart';
+import 'package:flutter/material.dart';
 
 class BookCard extends StatelessWidget {
+  const BookCard({super.key, required this.book, required this.onTap});
   final Book book;
   final VoidCallback onTap;
 
-  const BookCard({super.key, required this.book, required this.onTap});
-
   @override
   Widget build(BuildContext context) {
-    return GestureDetector(
+    final colors = Theme.of(context).colorScheme;
+    return InkWell(
       onTap: onTap,
-      child: Container(
-        decoration: BoxDecoration(
-          color: Colors.white,
-          borderRadius: BorderRadius.circular(16), // Coins arrondis modernes
-          boxShadow: [
-            BoxShadow(
-              color: Colors.black.withValues(alpha: 0.05), // Ombre très douce
-              blurRadius: 10,
-              offset: const Offset(0, 4),
-            ),
-          ],
-        ),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            // 1. Image du livre (Partie haute)
-            Expanded(
-              child: ClipRRect(
-                borderRadius: const BorderRadius.vertical(top: Radius.circular(16)),
-                child: Hero(
-                  // Hero : C'est la magie qui lie l'image de la liste à celle du détail
-                  tag: 'book-cover-${book.id}', 
-                  child: book.coverUrl != null
-                      ? Image.network(
-                          book.coverUrl!,
-                          fit: BoxFit.cover,
-                          width: double.infinity,
-                        )
-                      : Container(
-                          color: Colors.grey[200],
-                          child: const Center(child: Icon(Icons.book, color: Colors.grey)),
-                        ),
-                ),
-              ),
-            ),
-            
-            // 2. Informations (Partie basse)
-            Padding(
-              padding: const EdgeInsets.all(12.0),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    book.title,
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
-                    style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                          fontWeight: FontWeight.bold,
-                          fontSize: 14,
-                        ),
-                  ),
-                  const SizedBox(height: 4),
-                  Text(
-                    book.author,
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
-                    style: TextStyle(color: Colors.grey[600], fontSize: 12),
-                  ),
-                  const SizedBox(height: 8),
-                  Text(
-                    "${book.price} FCFA",
-                    style: TextStyle(
-                      color: Theme.of(context).primaryColor,
-                      fontWeight: FontWeight.w800,
+      borderRadius: BorderRadius.circular(18),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Expanded(
+            child: Stack(
+              children: [
+                Positioned.fill(
+                  child: Hero(
+                    tag: 'book-cover-${book.id}',
+                    child: ClipRRect(
+                      borderRadius: BorderRadius.circular(16),
+                      child: book.coverUrl == null
+                          ? ColoredBox(
+                              color: colors.surfaceContainerHighest,
+                              child: Icon(
+                                Icons.auto_stories_rounded,
+                                size: 42,
+                                color: colors.primary,
+                              ),
+                            )
+                          : Image.network(
+                              book.coverUrl!,
+                              fit: BoxFit.cover,
+                              errorBuilder: (_, _, _) => ColoredBox(
+                                color: colors.surfaceContainerHighest,
+                                child: Icon(
+                                  Icons.auto_stories_rounded,
+                                  size: 42,
+                                  color: colors.primary,
+                                ),
+                              ),
+                            ),
                     ),
                   ),
-                ],
-              ),
+                ),
+                Positioned(
+                  top: 8,
+                  right: 8,
+                  child: DecoratedBox(
+                    decoration: BoxDecoration(
+                      color: colors.surface.withValues(alpha: .94),
+                      shape: BoxShape.circle,
+                    ),
+                    child: FavoriteButton(bookId: book.id),
+                  ),
+                ),
+              ],
             ),
-          ],
-        ),
+          ),
+          const SizedBox(height: 10),
+          Text(
+            book.title,
+            maxLines: 2,
+            overflow: TextOverflow.ellipsis,
+            style: const TextStyle(
+              fontWeight: FontWeight.w700,
+              fontSize: 14,
+              height: 1.2,
+            ),
+          ),
+          const SizedBox(height: 3),
+          Text(
+            book.author,
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
+            style: TextStyle(color: colors.onSurfaceVariant, fontSize: 12),
+          ),
+          const SizedBox(height: 5),
+          Text(
+            '${book.price} FCFA',
+            style: TextStyle(
+              color: colors.primary,
+              fontWeight: FontWeight.w800,
+              fontSize: 13,
+            ),
+          ),
+        ],
       ),
     );
   }

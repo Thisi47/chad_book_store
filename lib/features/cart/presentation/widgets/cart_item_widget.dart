@@ -3,13 +3,13 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:chad_book_store/features/cart/domain/cart_item.dart';
 import 'package:chad_book_store/features/cart/presentation/cart_provider.dart';
 
-class CartItemWidget extends ConsumerWidget {
+class CartItemWidget extends StatelessWidget {
   final CartItem item;
 
   const CartItemWidget({super.key, required this.item});
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
+  Widget build(BuildContext context) {
     return Card(
       margin: const EdgeInsets.only(bottom: 16),
       elevation: 0,
@@ -19,86 +19,145 @@ class CartItemWidget extends ConsumerWidget {
       ),
       child: Padding(
         padding: const EdgeInsets.all(8.0),
-        child: Row(
-          children: [
-            // 1. Image Miniature (Avec gestion d'erreur robuste)
-            ClipRRect(
-              borderRadius: BorderRadius.circular(8),
-              child: SizedBox( // On force une taille fixe quoiqu'il arrive
-                width: 60,
-                height: 80,
-                child: item.book.coverUrl != null
-                    ? Image.network(
-                  item.book.coverUrl!,
-                  fit: BoxFit.cover,
-                  // C'est ici qu'on gère l'erreur 403/404 pour ne pas casser le layout
-                  errorBuilder: (context, error, stackTrace) {
-                    return Container(
-                      color: Colors.grey[200],
-                      child: const Icon(Icons.broken_image, color: Colors.grey),
-                    );
-                  },
-                )
-                    : Container(
-                  color: Colors.grey[200],
-                  child: const Icon(Icons.book, color: Colors.grey),
-                ),
-              ),
-            ),
-            const SizedBox(width: 16),
-
-            // 2. Infos Livre (Expanded est CRUCIAL pour éviter l'overflow)
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    item.book.title,
-                    maxLines: 2,
-                    overflow: TextOverflow.ellipsis, // Coupe le texte s'il est trop long
-                    style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
-                  ),
-                  const SizedBox(height: 4),
-                  Text(
-                    "${item.book.price} FCFA",
-                    style: TextStyle(
-                      color: Theme.of(context).primaryColor,
-                      fontWeight: FontWeight.w600,
+        child: LayoutBuilder(
+          builder: (context, constraints) => constraints.maxWidth < 340
+              ? Column(
+                  children: [
+                    Row(
+                      children: [
+                        _BookCover(item: item, width: 48, height: 64),
+                        const SizedBox(width: 10),
+                        Expanded(
+                          child: Text(
+                            item.book.title,
+                            maxLines: 3,
+                            overflow: TextOverflow.ellipsis,
+                            style: const TextStyle(
+                              fontWeight: FontWeight.bold,
+                              fontSize: 15,
+                            ),
+                          ),
+                        ),
+                      ],
                     ),
-                  ),
-                ],
-              ),
-            ),
+                    const SizedBox(height: 8),
+                    Row(
+                      children: [
+                        Expanded(
+                          child: Text(
+                            '${item.book.price} FCFA',
+                            style: TextStyle(
+                              color: Theme.of(context).colorScheme.primary,
+                              fontWeight: FontWeight.w600,
+                            ),
+                          ),
+                        ),
+                        _QuantityControls(item: item),
+                      ],
+                    ),
+                  ],
+                )
+              : Row(
+                  children: [
+                    // 1. Image Miniature (Avec gestion d'erreur robuste)
+                    _BookCover(item: item, width: 60, height: 80),
+                    const SizedBox(width: 16),
 
-            // 3. Contrôles Quantité
-            Row(
-              children: [
-                _QuantityButton(
-                  icon: Icons.remove,
-                  onTap: () {
-                    ref.read(cartProvider.notifier).removeItem(item.book);
-                  },
+                    // 2. Infos Livre (Expanded est CRUCIAL pour éviter l'overflow)
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            item.book.title,
+                            maxLines: 2,
+                            overflow: TextOverflow
+                                .ellipsis, // Coupe le texte s'il est trop long
+                            style: const TextStyle(
+                              fontWeight: FontWeight.bold,
+                              fontSize: 16,
+                            ),
+                          ),
+                          const SizedBox(height: 4),
+                          Text(
+                            "${item.book.price} FCFA",
+                            style: TextStyle(
+                              color: Theme.of(context).primaryColor,
+                              fontWeight: FontWeight.w600,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+
+                    // 3. Contrôles Quantité
+                    _QuantityControls(item: item),
+                  ],
                 ),
-                Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 8), // Réduit un peu l'espace
-                  child: Text(
-                    "${item.quantity}",
-                    style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
-                  ),
-                ),
-                _QuantityButton(
-                  icon: Icons.add,
-                  onTap: () {
-                    ref.read(cartProvider.notifier).addItem(item.book);
-                  },
-                ),
-              ],
-            ),
-          ],
         ),
       ),
     );
   }
+}
+
+class _BookCover extends StatelessWidget {
+  const _BookCover({
+    required this.item,
+    required this.width,
+    required this.height,
+  });
+  final CartItem item;
+  final double width;
+  final double height;
+
+  @override
+  Widget build(BuildContext context) => ClipRRect(
+    borderRadius: BorderRadius.circular(8),
+    child: SizedBox(
+      width: width,
+      height: height,
+      child: item.book.coverUrl == null
+          ? ColoredBox(
+              color: Theme.of(context).colorScheme.surfaceContainerHighest,
+              child: const Icon(Icons.book_outlined),
+            )
+          : Image.network(
+              item.book.coverUrl!,
+              fit: BoxFit.cover,
+              errorBuilder: (_, _, _) => ColoredBox(
+                color: Theme.of(context).colorScheme.surfaceContainerHighest,
+                child: const Icon(Icons.broken_image_outlined),
+              ),
+            ),
+    ),
+  );
+}
+
+class _QuantityControls extends ConsumerWidget {
+  const _QuantityControls({required this.item});
+  final CartItem item;
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) => Row(
+    mainAxisSize: MainAxisSize.min,
+    children: [
+      _QuantityButton(
+        icon: Icons.remove,
+        onTap: () => ref.read(cartProvider.notifier).removeItem(item.book),
+      ),
+      Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 8),
+        child: Text(
+          '${item.quantity}',
+          style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
+        ),
+      ),
+      _QuantityButton(
+        icon: Icons.add,
+        onTap: () => ref.read(cartProvider.notifier).addItem(item.book),
+      ),
+    ],
+  );
 }
 
 class _QuantityButton extends StatelessWidget {

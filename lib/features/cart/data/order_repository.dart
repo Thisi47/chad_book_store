@@ -8,6 +8,13 @@ final orderRepositoryProvider = Provider<OrderRepository>((ref) {
   return OrderRepository(Supabase.instance.client);
 });
 
+class ReadingSource {
+  const ReadingSource({required this.url, required this.extension});
+
+  final String url;
+  final String extension;
+}
+
 class OrderRepository {
   final SupabaseClient _client;
 
@@ -85,7 +92,7 @@ class OrderRepository {
     return (books as List<dynamic>).map((json) => Book.fromJson(json)).toList();
   }
 
-  Future<String> getReadingUrl(String bookId) async {
+  Future<ReadingSource> getReadingSource(String bookId) async {
     final books = await getMyBooks();
     Book? ownedBook;
     for (final book in books) {
@@ -104,8 +111,15 @@ class OrderRepository {
         'Le fichier de lecture de ce livre n’est pas disponible.',
       );
     }
-    return _client.storage.from('book-files').createSignedUrl(path, 60 * 60);
+    final url = await _client.storage
+        .from('book-files')
+        .createSignedUrl(path, 60 * 60);
+    final extension = path.split('.').last.toLowerCase();
+    return ReadingSource(url: url, extension: extension);
   }
+
+  Future<String> getReadingUrl(String bookId) async =>
+      (await getReadingSource(bookId)).url;
 }
 
 class LibrarySetupRequiredException implements Exception {

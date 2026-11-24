@@ -5,6 +5,7 @@ import 'package:chad_book_store/features/auth/presentation/pages/login_page.dart
 import 'package:chad_book_store/features/auth/presentation/pages/update_password_page.dart';
 import 'package:chad_book_store/features/auth/presentation/pages/register_page.dart';
 import 'package:chad_book_store/features/auth/data/auth_state_provider.dart';
+import 'package:chad_book_store/core/widgets/app_shell.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:chad_book_store/features/products/domain/book.dart';
@@ -13,6 +14,7 @@ import 'package:chad_book_store/features/cart/presentation/pages/cart_page.dart'
 import 'package:chad_book_store/features/favorites/presentation/pages/favorites_page.dart';
 import 'package:chad_book_store/features/library/presentation/pages/library_page.dart';
 import 'package:chad_book_store/features/library/presentation/pages/reader_page.dart';
+import 'package:chad_book_store/features/library/presentation/pages/other_document_reader_page.dart';
 import 'package:chad_book_store/features/profile/presentation/pages/profile_page.dart';
 
 import '../features/cart/presentation/pages/orders_page.dart';
@@ -23,7 +25,7 @@ final routerProvider = Provider<GoRouter>((ref) {
 
   return GoRouter(
     navigatorKey: GlobalKey<NavigatorState>(),
-    debugLogDiagnostics: true,
+    debugLogDiagnostics: false,
     initialLocation: '/home',
 
     routes: [
@@ -53,14 +55,51 @@ final routerProvider = Provider<GoRouter>((ref) {
         builder: (context, state) => const UpdatePasswordPage(),
       ),
 
-      GoRoute(path: '/home', builder: (context, state) => const HomePage()),
-      GoRoute(
-        path: '/favorites',
-        builder: (context, state) => const FavoritesPage(),
-      ),
-      GoRoute(
-        path: '/library',
-        builder: (context, state) => const LibraryPage(),
+      StatefulShellRoute.indexedStack(
+        builder: (context, state, navigationShell) =>
+            AppShell(navigationShell: navigationShell),
+        branches: [
+          StatefulShellBranch(
+            routes: [
+              GoRoute(
+                path: '/home',
+                builder: (context, state) => const HomePage(),
+              ),
+            ],
+          ),
+          StatefulShellBranch(
+            routes: [
+              GoRoute(
+                path: '/library',
+                builder: (context, state) => const LibraryPage(),
+              ),
+            ],
+          ),
+          StatefulShellBranch(
+            routes: [
+              GoRoute(
+                path: '/cart',
+                builder: (context, state) => const CartPage(),
+              ),
+            ],
+          ),
+          StatefulShellBranch(
+            routes: [
+              GoRoute(
+                path: '/favorites',
+                builder: (context, state) => const FavoritesPage(),
+              ),
+            ],
+          ),
+          StatefulShellBranch(
+            routes: [
+              GoRoute(
+                path: '/profile',
+                builder: (context, state) => const ProfilePage(),
+              ),
+            ],
+          ),
+        ],
       ),
       GoRoute(
         path: '/reader',
@@ -71,14 +110,12 @@ final routerProvider = Provider<GoRouter>((ref) {
               body: Center(child: Text('Livre introuvable.')),
             );
           }
-          return ReaderPage(book: book);
+          final extension = book.readingPath?.split('.').last.toLowerCase();
+          return extension == null || extension == 'pdf'
+              ? ReaderPage(book: book)
+              : OtherDocumentReaderPage(book: book);
         },
       ),
-      GoRoute(
-        path: '/profile',
-        builder: (context, state) => const ProfilePage(),
-      ),
-
       GoRoute(
         path: '/details',
         builder: (context, state) {
@@ -91,8 +128,6 @@ final routerProvider = Provider<GoRouter>((ref) {
           return ProductDetailsPage(book: book);
         },
       ),
-
-      GoRoute(path: '/cart', builder: (context, state) => const CartPage()),
 
       GoRoute(path: '/orders', builder: (context, state) => const OrdersPage()),
     ],

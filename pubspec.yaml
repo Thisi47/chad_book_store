@@ -1,7 +1,7 @@
 name: chad_book_store
 description: "A new Flutter project."
 publish_to: 'none'
-version: 0.1.0
+version: 1.0.0+1
 
 environment:
   sdk: ^3.10.4
@@ -9,6 +9,7 @@ environment:
 dependencies:
   flutter:
     sdk: flutter
+  cupertino_icons: ^1.0.8
   # State Management & DI
   flutter_riverpod: ^2.6.1 # Ou version compatible 2026
   riverpod_annotation: ^2.6.1
@@ -18,7 +19,7 @@ dependencies:
 
   # Utilitaires & UI
   flutter_hooks: ^0.20.0
-  google_fonts: ^6.2.0 # Pour une typo pro
+  cached_network_image: ^3.4.1
   
   # Données Locales (Offline-first)
   shared_preferences: ^2.3.0
@@ -27,6 +28,9 @@ dependencies:
   json_annotation: ^4.9.0
   image_picker: ^1.2.4
   syncfusion_flutter_pdfviewer: ^35.2.12
+  flutter_epub_viewer: ^2.2.1
+  http: ^1.6.0
+  flutter_markdown: ^0.7.7
   # Nous ajouterons Drift/Isar plus tard pour ne pas surcharger maintenant
 
 dev_dependencies:

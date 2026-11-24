@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:chad_book_store/features/cart/domain/cart_item.dart';
 import 'package:chad_book_store/features/cart/presentation/cart_provider.dart';
+import 'package:chad_book_store/core/widgets/cached_book_image.dart';
 
 class CartItemWidget extends StatelessWidget {
   final CartItem item;
@@ -121,14 +122,7 @@ class _BookCover extends StatelessWidget {
               color: Theme.of(context).colorScheme.surfaceContainerHighest,
               child: const Icon(Icons.book_outlined),
             )
-          : Image.network(
-              item.book.coverUrl!,
-              fit: BoxFit.cover,
-              errorBuilder: (_, _, _) => ColoredBox(
-                color: Theme.of(context).colorScheme.surfaceContainerHighest,
-                child: const Icon(Icons.broken_image_outlined),
-              ),
-            ),
+          : CachedBookImage(url: item.book.coverUrl!, cacheWidth: 140),
     ),
   );
 }
@@ -143,6 +137,7 @@ class _QuantityControls extends ConsumerWidget {
     children: [
       _QuantityButton(
         icon: Icons.remove,
+        label: 'Retirer un exemplaire de ${item.book.title}',
         onTap: () => ref.read(cartProvider.notifier).removeItem(item.book),
       ),
       Padding(
@@ -154,6 +149,7 @@ class _QuantityControls extends ConsumerWidget {
       ),
       _QuantityButton(
         icon: Icons.add,
+        label: 'Ajouter un exemplaire de ${item.book.title}',
         onTap: () => ref.read(cartProvider.notifier).addItem(item.book),
       ),
     ],
@@ -162,22 +158,38 @@ class _QuantityControls extends ConsumerWidget {
 
 class _QuantityButton extends StatelessWidget {
   final IconData icon;
+  final String label;
   final VoidCallback onTap;
 
-  const _QuantityButton({required this.icon, required this.onTap});
+  const _QuantityButton({
+    required this.icon,
+    required this.label,
+    required this.onTap,
+  });
 
   @override
   Widget build(BuildContext context) {
-    return InkWell(
-      onTap: onTap,
-      borderRadius: BorderRadius.circular(20),
-      child: Container(
-        padding: const EdgeInsets.all(4),
-        decoration: BoxDecoration(
-          color: Colors.grey[100],
-          shape: BoxShape.circle,
+    final colors = Theme.of(context).colorScheme;
+    return Semantics(
+      button: true,
+      label: label,
+      child: InkWell(
+        onTap: onTap,
+        borderRadius: BorderRadius.circular(24),
+        child: SizedBox(
+          width: 48,
+          height: 48,
+          child: Center(
+            child: Container(
+              padding: const EdgeInsets.all(7),
+              decoration: BoxDecoration(
+                color: colors.surfaceContainerHighest,
+                shape: BoxShape.circle,
+              ),
+              child: Icon(icon, size: 18, color: colors.onSurface),
+            ),
+          ),
         ),
-        child: Icon(icon, size: 18, color: Colors.black87),
       ),
     );
   }

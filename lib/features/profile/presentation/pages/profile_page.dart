@@ -1,7 +1,7 @@
 import 'package:chad_book_store/features/profile/data/profile_repository.dart';
 import 'package:chad_book_store/core/theme/theme_controller.dart';
 import 'package:chad_book_store/core/widgets/app_feedback.dart';
-import 'package:chad_book_store/core/widgets/app_bottom_navigation.dart';
+import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:image_picker/image_picker.dart';
@@ -107,7 +107,6 @@ class _ProfilePageState extends ConsumerState<ProfilePage> {
     final themeMode = ref.watch(themeModeProvider);
     return Scaffold(
       appBar: AppBar(title: const Text('Mon profil')),
-      bottomNavigationBar: const AppBottomNavigation(selectedIndex: 3),
       body: user == null
           ? const Center(child: Text('Connectez-vous pour voir votre profil.'))
           : SingleChildScrollView(
@@ -125,7 +124,10 @@ class _ProfilePageState extends ConsumerState<ProfilePage> {
                             radius: 56,
                             backgroundImage: _avatarUrl == null
                                 ? null
-                                : NetworkImage(_avatarUrl!),
+                                : CachedNetworkImageProvider(
+                                    _avatarUrl!,
+                                    maxWidth: 160,
+                                  ),
                             child: _avatarUrl == null
                                 ? const Icon(Icons.person, size: 56)
                                 : null,

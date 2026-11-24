@@ -1,10 +1,19 @@
 import 'package:flutter/material.dart';
+import 'package:chad_book_store/core/widgets/cached_book_image.dart';
 import 'package:chad_book_store/features/products/domain/book.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:chad_book_store/features/cart/presentation/cart_provider.dart';
 import 'package:chad_book_store/features/favorites/presentation/widgets/favorite_button.dart';
 import 'package:chad_book_store/core/widgets/app_feedback.dart';
+import 'package:chad_book_store/features/products/data/products_repository.dart';
 import 'package:go_router/go_router.dart';
+
+final bookDetailsProvider = FutureProvider.autoDispose.family<Book, String>((
+  ref,
+  id,
+) {
+  return ref.watch(productsRepositoryProvider).getBookDetails(id);
+});
 
 class ProductDetailsPage extends ConsumerWidget {
   final Book book;
@@ -13,6 +22,10 @@ class ProductDetailsPage extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    final details = book.description == null
+        ? ref.watch(bookDetailsProvider(book.id))
+        : null;
+    final description = book.description ?? details?.valueOrNull?.description;
     return Scaffold(
       backgroundColor: Theme.of(context).colorScheme.surface,
       // AppBar transparente pour laisser la place à l'image
@@ -44,6 +57,7 @@ class ProductDetailsPage extends ConsumerWidget {
                   tag:
                       'book-cover-${book.id}', // Même tag que sur la Home Page !
                   child: Container(
+                    width: 175,
                     height: 250,
                     decoration: BoxDecoration(
                       boxShadow: [
@@ -57,7 +71,10 @@ class ProductDetailsPage extends ConsumerWidget {
                     child: ClipRRect(
                       borderRadius: BorderRadius.circular(8),
                       child: book.coverUrl != null
-                          ? Image.network(book.coverUrl!, fit: BoxFit.cover)
+                          ? CachedBookImage(
+                              url: book.coverUrl!,
+                              cacheWidth: 600,
+                            )
                           : const Icon(Icons.book, size: 100),
                     ),
                   ),
@@ -131,14 +148,24 @@ class ProductDetailsPage extends ConsumerWidget {
                     style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
                   ),
                   const SizedBox(height: 12),
-                  Text(
-                    book.description ?? "Aucune description.",
-                    style: TextStyle(
-                      fontSize: 16,
-                      height: 1.6, // Meilleure lisibilité
-                      color: Colors.grey[800],
+                  if (details?.isLoading == true && description == null)
+                    const LinearProgressIndicator()
+                  else if (details?.hasError == true && description == null)
+                    TextButton.icon(
+                      onPressed: () =>
+                          ref.invalidate(bookDetailsProvider(book.id)),
+                      icon: const Icon(Icons.refresh),
+                      label: const Text('Description indisponible. Réessayer'),
+                    )
+                  else
+                    Text(
+                      description ?? 'Aucune description disponible.',
+                      style: TextStyle(
+                        fontSize: 16,
+                        height: 1.6,
+                        color: Theme.of(context).colorScheme.onSurfaceVariant,
+                      ),
                     ),
-                  ),
                 ],
               ),
             ),
@@ -150,9 +177,9 @@ class ProductDetailsPage extends ConsumerWidget {
 
       // 3. Barre d'action fixe en bas (Sticky Bottom Bar)
       bottomNavigationBar: Container(
-        padding: const EdgeInsets.fromLTRB(16, 12, 16, 12),
+        padding: const EdgeInsets.fromLTRB(16, 12, 16, 8),
         decoration: BoxDecoration(
-          color: Colors.white,
+          color: Theme.of(context).colorScheme.surface,
           boxShadow: [
             BoxShadow(
               color: Colors.black.withValues(alpha: 0.05),
@@ -162,6 +189,7 @@ class ProductDetailsPage extends ConsumerWidget {
           ],
         ),
         child: SafeArea(
+          top: false,
           child: FilledButton(
             // ACTION DU BOUTON
             onPressed: () {
@@ -174,7 +202,7 @@ class ProductDetailsPage extends ConsumerWidget {
                 '${book.title} ajouté au panier.',
                 action: SnackBarAction(
                   label: 'Voir le panier',
-                  onPressed: () => context.push('/cart'),
+                  onPressed: () => context.go('/cart'),
                 ),
               );
             },

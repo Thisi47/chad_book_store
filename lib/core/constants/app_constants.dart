@@ -1,7 +1,7 @@
 import 'package:flutter/foundation.dart';
 
 class AppConstants {
-  static const appName = "Chad Book Store";
+  static const appName = "Tchad Books";
   static const appCurrency = "F CFA";
   static const supabaseUrl = "https://snjufojacjsxoyugkmou.supabase.co";
   static const supabaseAnonKey =

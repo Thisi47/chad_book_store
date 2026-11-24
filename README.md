@@ -115,3 +115,17 @@ Le service d'e-mail intégré de Supabase est limité (actuellement 2 e-mails
 d'authentification par heure pour le projet). Pour les tests répétés ou la
 production, configurez un SMTP personnalisé dans **Authentication → SMTP
 Settings** et consultez les [limites Auth Supabase](https://supabase.com/docs/guides/auth/rate-limits).
+
+## Livraison Android
+
+La version de livraison est indiquée dans `pubspec.yaml`. Pour générer les
+artefacts Android signés, créez `android/key.properties` à partir de
+[`android/key.properties.example`](./android/key.properties.example) et placez
+la clé `release-key.jks` dans `android/`. Ces deux fichiers sont ignorés par
+Git. Gardez une copie chiffrée de la clé et de ses mots de passe : ils sont
+nécessaires pour signer les futures mises à jour de l'application.
+
+```sh
+flutter build apk --release
+flutter build appbundle --release
+```

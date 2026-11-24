@@ -1,5 +1,6 @@
 import 'package:chad_book_store/features/favorites/presentation/widgets/favorite_button.dart';
 import 'package:chad_book_store/features/products/domain/book.dart';
+import 'package:chad_book_store/core/widgets/cached_book_image.dart';
 import 'package:flutter/material.dart';
 
 class BookCard extends StatelessWidget {
@@ -33,17 +34,9 @@ class BookCard extends StatelessWidget {
                                 color: colors.primary,
                               ),
                             )
-                          : Image.network(
-                              book.coverUrl!,
-                              fit: BoxFit.cover,
-                              errorBuilder: (_, _, _) => ColoredBox(
-                                color: colors.surfaceContainerHighest,
-                                child: Icon(
-                                  Icons.auto_stories_rounded,
-                                  size: 42,
-                                  color: colors.primary,
-                                ),
-                              ),
+                          : CachedBookImage(
+                              url: book.coverUrl!,
+                              cacheWidth: 360,
                             ),
                     ),
                   ),

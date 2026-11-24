@@ -1,9 +1,9 @@
 import 'package:chad_book_store/core/constants/app_constants.dart';
-import 'package:chad_book_store/features/cart/presentation/cart_provider.dart';
+import 'package:chad_book_store/core/widgets/cached_book_image.dart';
 import 'package:chad_book_store/features/products/data/products_repository.dart';
+import 'package:chad_book_store/features/library/data/reading_progress_repository.dart';
 import 'package:chad_book_store/features/products/domain/book.dart';
 import 'package:chad_book_store/features/products/presentation/widgets/book_card.dart';
-import 'package:chad_book_store/core/widgets/app_bottom_navigation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
@@ -37,7 +37,6 @@ class _HomePageState extends ConsumerState<HomePage> {
   @override
   Widget build(BuildContext context) {
     final user = Supabase.instance.client.auth.currentUser;
-    final cartCount = ref.watch(cartProvider).length;
     final colors = Theme.of(context).colorScheme;
     final screenWidth = MediaQuery.sizeOf(context).width;
     final horizontalInset = screenWidth >= 1100
@@ -63,39 +62,20 @@ class _HomePageState extends ConsumerState<HomePage> {
                 size: 21,
               ),
             ),
-            if (screenWidth >= 370) ...[
-              const SizedBox(width: 10),
-              Flexible(
-                child: Text(
-                  AppConstants.appName,
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
-                  style: const TextStyle(
-                    fontWeight: FontWeight.w800,
-                    letterSpacing: -.5,
-                  ),
+            const SizedBox(width: 10),
+            Flexible(
+              child: Text(
+                AppConstants.appName,
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+                style: const TextStyle(
+                  fontWeight: FontWeight.w800,
+                  letterSpacing: -.5,
                 ),
               ),
-            ],
+            ),
           ],
         ),
-        actions: [
-          IconButton(
-            tooltip: 'Mes favoris',
-            onPressed: () => context.push('/favorites'),
-            icon: const Icon(Icons.favorite_border_rounded),
-          ),
-          IconButton(
-            tooltip: 'Mon panier',
-            onPressed: () => context.push('/cart'),
-            icon: Badge(
-              isLabelVisible: cartCount > 0,
-              label: Text('$cartCount'),
-              child: const Icon(Icons.shopping_bag_outlined),
-            ),
-          ),
-          const SizedBox(width: 8),
-        ],
       ),
       body: FutureBuilder<List<Book>>(
         future: _booksFuture,
@@ -107,9 +87,26 @@ class _HomePageState extends ConsumerState<HomePage> {
             return Center(
               child: Padding(
                 padding: const EdgeInsets.all(24),
-                child: Text(
-                  'Impossible de charger le catalogue.\n${snapshot.error}',
-                  textAlign: TextAlign.center,
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    const Icon(Icons.wifi_off_rounded, size: 44),
+                    const SizedBox(height: 12),
+                    const Text(
+                      'Le catalogue ne répond pas. Vérifiez votre connexion puis réessayez.',
+                      textAlign: TextAlign.center,
+                    ),
+                    const SizedBox(height: 12),
+                    FilledButton.icon(
+                      onPressed: () => setState(() {
+                        _booksFuture = ref
+                            .read(productsRepositoryProvider)
+                            .getAllBooks();
+                      }),
+                      icon: const Icon(Icons.refresh_rounded),
+                      label: const Text('Réessayer'),
+                    ),
+                  ],
                 ),
               ),
             );
@@ -191,6 +188,7 @@ class _HomePageState extends ConsumerState<HomePage> {
                         ),
                       ),
                       const SizedBox(height: 21),
+                      _ContinueReading(books: books),
                       if (_query.isEmpty && _category == 'Tout')
                         _FeaturedBook(
                           book: books.first,
@@ -295,7 +293,106 @@ class _HomePageState extends ConsumerState<HomePage> {
           );
         },
       ),
-      bottomNavigationBar: const AppBottomNavigation(selectedIndex: 0),
+    );
+  }
+}
+
+class _ContinueReading extends ConsumerWidget {
+  const _ContinueReading({required this.books});
+
+  final List<Book> books;
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final userId = Supabase.instance.client.auth.currentUser?.id;
+    if (userId == null) return const SizedBox.shrink();
+    final progress = ref.watch(lastReadingProgressProvider(userId));
+    return progress.when(
+      loading: () => const SizedBox.shrink(),
+      error: (_, _) => const SizedBox.shrink(),
+      data: (value) {
+        if (value == null) return const SizedBox.shrink();
+        final matches = books.where((book) => book.id == value.bookId);
+        if (matches.isEmpty) return const SizedBox.shrink();
+        final book = matches.first;
+        final fraction = value.fraction.clamp(0.0, 1.0);
+        final colors = Theme.of(context).colorScheme;
+        return Padding(
+          padding: const EdgeInsets.only(bottom: 20),
+          child: Material(
+            color: colors.surfaceContainerLow,
+            borderRadius: BorderRadius.circular(20),
+            clipBehavior: Clip.antiAlias,
+            child: InkWell(
+              onTap: () => context.push('/reader', extra: book),
+              child: Padding(
+                padding: const EdgeInsets.all(14),
+                child: Row(
+                  children: [
+                    SizedBox(
+                      width: 62,
+                      height: 82,
+                      child: ClipRRect(
+                        borderRadius: BorderRadius.circular(11),
+                        child: book.coverUrl == null
+                            ? ColoredBox(
+                                color: colors.surfaceContainerHighest,
+                                child: Icon(
+                                  Icons.auto_stories_rounded,
+                                  color: colors.primary,
+                                ),
+                              )
+                            : CachedBookImage(
+                                url: book.coverUrl!,
+                                cacheWidth: 140,
+                              ),
+                      ),
+                    ),
+                    const SizedBox(width: 14),
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            'REPRENDRE LA LECTURE',
+                            style: TextStyle(
+                              color: colors.primary,
+                              fontSize: 10,
+                              fontWeight: FontWeight.w800,
+                              letterSpacing: 1,
+                            ),
+                          ),
+                          const SizedBox(height: 5),
+                          Text(
+                            book.title,
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                            style: const TextStyle(fontWeight: FontWeight.w800),
+                          ),
+                          const SizedBox(height: 5),
+                          Text(
+                            value.totalPages > 0
+                                ? 'Page ${value.page} sur ${value.totalPages}'
+                                : 'Continuer à la page ${value.page}',
+                            style: TextStyle(
+                              color: colors.onSurfaceVariant,
+                              fontSize: 12,
+                            ),
+                          ),
+                          const SizedBox(height: 9),
+                          LinearProgressIndicator(value: fraction),
+                        ],
+                      ),
+                    ),
+                    const SizedBox(width: 8),
+                    Icon(Icons.play_circle_fill_rounded, color: colors.primary),
+                  ],
+                ),
+              ),
+            ),
+          ),
+        );
+      },
     );
   }
 }
@@ -392,15 +489,11 @@ class _FeaturedBook extends StatelessWidget {
                               size: 38,
                             ),
                           )
-                        : Image.network(
-                            book.coverUrl!,
-                            fit: BoxFit.cover,
-                            errorBuilder: (_, _, _) => Container(
-                              color: Colors.white12,
-                              child: const Icon(
-                                Icons.auto_stories,
-                                color: Colors.white,
-                              ),
+                        : CachedBookImage(
+                            url: book.coverUrl!,
+                            cacheWidth: 280,
+                            placeholderColor: colors.primary.withValues(
+                              alpha: .7,
                             ),
                           ),
                   ),

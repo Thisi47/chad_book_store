@@ -1,6 +1,7 @@
 import 'package:chad_book_store/features/cart/data/order_repository.dart';
+import 'package:chad_book_store/core/widgets/cached_book_image.dart';
+import 'package:chad_book_store/core/widgets/empty_state.dart';
 import 'package:chad_book_store/features/products/domain/book.dart';
-import 'package:chad_book_store/core/widgets/app_bottom_navigation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
@@ -17,37 +18,23 @@ class LibraryPage extends ConsumerWidget {
     final books = ref.watch(myBooksProvider);
     return Scaffold(
       appBar: AppBar(title: const Text('Ma bibliothèque')),
-      bottomNavigationBar: const AppBottomNavigation(selectedIndex: 1),
       body: books.when(
         loading: () => const Center(child: CircularProgressIndicator()),
-        error: (error, stack) => Center(
-          child: Padding(
-            padding: const EdgeInsets.all(24),
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                const Icon(Icons.cloud_off_outlined, size: 48),
-                const SizedBox(height: 16),
-                Text(
-                  error is LibrarySetupRequiredException
-                      ? error.toString()
-                      : 'Impossible de charger votre bibliothèque : $error',
-                  textAlign: TextAlign.center,
-                ),
-                const SizedBox(height: 12),
-                TextButton.icon(
-                  onPressed: () => ref.invalidate(myBooksProvider),
-                  icon: const Icon(Icons.refresh),
-                  label: const Text('Réessayer'),
-                ),
-              ],
-            ),
-          ),
+        error: (error, stack) => EmptyState(
+          icon: Icons.wifi_off_rounded,
+          title: 'Bibliothèque indisponible',
+          message: error is LibrarySetupRequiredException
+              ? error.toString()
+              : 'Vérifiez votre connexion puis réessayez.',
+          actionLabel: 'Réessayer',
+          onAction: () => ref.invalidate(myBooksProvider),
         ),
         data: (items) {
           if (items.isEmpty) {
-            return const Center(
-              child: Text('Les livres commandés apparaîtront ici.'),
+            return EmptyState(
+              icon: Icons.menu_book_rounded,
+              title: 'Votre bibliothèque est vide',
+              message: 'Les livres disponibles à la lecture apparaîtront ici.',
             );
           }
           return ListView.separated(
@@ -77,23 +64,57 @@ class _LibraryBookTile extends StatelessWidget {
           width: 52,
           child: book.coverUrl == null
               ? const Icon(Icons.book, size: 36)
-              : Image.network(
-                  book.coverUrl!,
-                  fit: BoxFit.cover,
-                  errorBuilder: (context, error, stackTrace) =>
-                      const Icon(Icons.book, size: 36),
-                ),
+              : CachedBookImage(url: book.coverUrl!, cacheWidth: 120),
         ),
         title: Text(book.title, maxLines: 2, overflow: TextOverflow.ellipsis),
-        subtitle: Text(
-          book.readingPath == null ? 'Lecture indisponible' : book.author,
+        subtitle: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(book.author, maxLines: 1, overflow: TextOverflow.ellipsis),
+            if (book.readingPath == null)
+              Text(
+                'Fichier de lecture à configurer',
+                style: TextStyle(
+                  color: Theme.of(context).colorScheme.error,
+                  fontSize: 12,
+                ),
+              ),
+          ],
         ),
         trailing: IconButton.filled(
-          tooltip: 'Lire le livre',
-          onPressed: book.readingPath == null
-              ? null
-              : () => context.push('/reader', extra: book),
-          icon: const Icon(Icons.menu_book),
+          tooltip: book.readingPath == null
+              ? 'Détails de disponibilité'
+              : 'Lire le livre',
+          onPressed: () {
+            if (book.readingPath != null) {
+              context.push('/reader', extra: book);
+              return;
+            }
+            showDialog<void>(
+              context: context,
+              builder: (dialogContext) => AlertDialog(
+                icon: const Icon(Icons.menu_book_outlined),
+                title: const Text('Fichier non configuré'),
+                content: Text(
+                  'Le livre « ${book.title} » est dans votre bibliothèque, '
+                  'mais son document n’est pas encore relié. Un fichier PDF, '
+                  'EPUB, TXT ou Markdown doit être ajouté au stockage privé '
+                  '« book-files » et son chemin enregistré dans reading_path.',
+                ),
+                actions: [
+                  FilledButton(
+                    onPressed: () => Navigator.of(dialogContext).pop(),
+                    child: const Text('Compris'),
+                  ),
+                ],
+              ),
+            );
+          },
+          icon: Icon(
+            book.readingPath == null
+                ? Icons.info_outline_rounded
+                : Icons.menu_book,
+          ),
         ),
       ),
     );

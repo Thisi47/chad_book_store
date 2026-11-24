@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:chad_book_store/features/cart/data/order_repository.dart';
 import 'package:chad_book_store/features/cart/domain/order.dart';
 import 'package:go_router/go_router.dart';
+import 'package:chad_book_store/core/widgets/empty_state.dart';
 
 // 1. DÉFINITION DU PROVIDER (C'est ici la correction !)
 // On le définit en dehors de la classe pour qu'il soit accessible
@@ -25,7 +26,7 @@ class OrdersPage extends ConsumerWidget {
         actions: [
           IconButton(
             tooltip: 'Ma bibliothèque',
-            onPressed: () => context.push('/library'),
+            onPressed: () => context.go('/library'),
             icon: const Icon(Icons.menu_book_outlined),
           ),
         ],
@@ -34,15 +35,12 @@ class OrdersPage extends ConsumerWidget {
       body: ordersAsyncValue.when(
         data: (orders) {
           if (orders.isEmpty) {
-            return const Center(
-              child: Column(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  Icon(Icons.history, size: 80, color: Colors.grey),
-                  SizedBox(height: 16),
-                  Text("Aucune commande passée."),
-                ],
-              ),
+            return EmptyState(
+              icon: Icons.receipt_long_rounded,
+              title: 'Aucune commande pour le moment',
+              message: 'Vos commandes apparaîtront ici après validation.',
+              actionLabel: 'Découvrir les livres',
+              onAction: () => context.go('/home'),
             );
           }
           return ListView.builder(
@@ -57,7 +55,13 @@ class OrdersPage extends ConsumerWidget {
         // État de chargement (Rond qui tourne)
         loading: () => const Center(child: CircularProgressIndicator()),
         // État d'erreur
-        error: (err, stack) => Center(child: Text('Erreur: $err')),
+        error: (err, stack) => EmptyState(
+          icon: Icons.wifi_off_rounded,
+          title: 'Commandes indisponibles',
+          message: 'Vérifiez votre connexion puis réessayez.',
+          actionLabel: 'Réessayer',
+          onAction: () => ref.invalidate(ordersProvider),
+        ),
       ),
     );
   }

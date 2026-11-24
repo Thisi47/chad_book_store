@@ -6,6 +6,7 @@ import 'package:chad_book_store/features/cart/presentation/cart_provider.dart';
 import 'package:chad_book_store/features/cart/presentation/widgets/cart_item_widget.dart';
 import 'package:chad_book_store/features/cart/data/order_repository.dart'; // Import Repo
 import 'package:chad_book_store/core/widgets/app_feedback.dart';
+import 'package:chad_book_store/core/widgets/empty_state.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
 // Changement ici : HookConsumerWidget
@@ -19,6 +20,28 @@ class CartPage extends HookConsumerWidget {
 
     // État local pour le chargement du bouton
     final isOrdering = useState(false);
+
+    Future<void> confirmClearCart() async {
+      final shouldClear = await showDialog<bool>(
+        context: context,
+        builder: (dialogContext) => AlertDialog(
+          icon: const Icon(Icons.delete_outline_rounded),
+          title: const Text('Vider le panier ?'),
+          content: const Text('Tous les livres seront retirés du panier.'),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(dialogContext, false),
+              child: const Text('Garder'),
+            ),
+            FilledButton.tonal(
+              onPressed: () => Navigator.pop(dialogContext, true),
+              child: const Text('Vider'),
+            ),
+          ],
+        ),
+      );
+      if (shouldClear == true) ref.read(cartProvider.notifier).clearCart();
+    }
 
     // Fonction de commande
     Future<void> submitOrder() async {
@@ -59,8 +82,8 @@ class CartPage extends HookConsumerWidget {
               actions: [
                 FilledButton(
                   onPressed: () {
-                    context.pop(); // Ferme dialogue
-                    context.pop(); // Ferme page panier (Retour accueil)
+                    Navigator.of(ctx).pop();
+                    context.go('/home');
                   },
                   child: const Text("Continuer mes achats"),
                 ),
@@ -88,33 +111,19 @@ class CartPage extends HookConsumerWidget {
         actions: [
           if (cartItems.isNotEmpty)
             IconButton(
+              tooltip: 'Vider le panier',
               icon: const Icon(Icons.delete_outline),
-              onPressed: () => ref.read(cartProvider.notifier).clearCart(),
+              onPressed: confirmClearCart,
             ),
         ],
       ),
       body: cartItems.isEmpty
-          ? Center(
-              child: Column(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  const Icon(
-                    Icons.shopping_cart_outlined,
-                    size: 100,
-                    color: Colors.grey,
-                  ),
-                  const SizedBox(height: 20),
-                  const Text(
-                    "Votre panier est vide",
-                    style: TextStyle(fontSize: 18, color: Colors.grey),
-                  ),
-                  const SizedBox(height: 20),
-                  FilledButton(
-                    onPressed: () => context.pop(),
-                    child: const Text("Commencer mes achats"),
-                  ),
-                ],
-              ),
+          ? EmptyState(
+              icon: Icons.shopping_bag_outlined,
+              title: 'Votre panier est vide',
+              message: 'Ajoutez un livre et retrouvez-le ici.',
+              actionLabel: 'Explorer les livres',
+              onAction: () => context.go('/home'),
             )
           : Column(
               children: [
@@ -129,7 +138,7 @@ class CartPage extends HookConsumerWidget {
                 Container(
                   padding: const EdgeInsets.all(20),
                   decoration: BoxDecoration(
-                    color: Colors.white,
+                    color: Theme.of(context).colorScheme.surface,
                     boxShadow: [
                       BoxShadow(
                         color: Colors.black.withValues(alpha: 0.05),
@@ -139,6 +148,7 @@ class CartPage extends HookConsumerWidget {
                     ],
                   ),
                   child: SafeArea(
+                    top: false,
                     child: Column(
                       mainAxisSize: MainAxisSize.min,
                       children: [

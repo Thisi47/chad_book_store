@@ -2,7 +2,7 @@ import 'package:chad_book_store/features/favorites/data/favorites_repository.dar
 import 'package:chad_book_store/features/products/data/products_repository.dart';
 import 'package:chad_book_store/features/products/domain/book.dart';
 import 'package:chad_book_store/features/products/presentation/widgets/book_card.dart';
-import 'package:chad_book_store/core/widgets/app_bottom_navigation.dart';
+import 'package:chad_book_store/core/widgets/empty_state.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
@@ -23,13 +23,24 @@ class FavoritesPage extends ConsumerWidget {
 
     return Scaffold(
       appBar: AppBar(title: const Text('Mes favoris')),
-      bottomNavigationBar: const AppBottomNavigation(selectedIndex: 2),
       body: books.when(
         loading: () => const Center(child: CircularProgressIndicator()),
-        error: (error, stack) => Center(child: Text('Erreur: $error')),
+        error: (error, stack) => EmptyState(
+          icon: Icons.wifi_off_rounded,
+          title: 'Favoris indisponibles',
+          message: 'Vérifiez votre connexion puis réessayez.',
+          actionLabel: 'Réessayer',
+          onAction: () => ref.invalidate(favoriteBooksProvider),
+        ),
         data: (items) {
           if (items.isEmpty) {
-            return const Center(child: Text('Aucun livre dans vos favoris.'));
+            return EmptyState(
+              icon: Icons.favorite_border_rounded,
+              title: 'Vos favoris vous attendent',
+              message: 'Touchez le cœur d’un livre pour le retrouver ici.',
+              actionLabel: 'Explorer les livres',
+              onAction: () => context.go('/home'),
+            );
           }
           final width = MediaQuery.sizeOf(context).width;
           final columns = width >= 1000

@@ -25,4 +25,15 @@ export type Order = {
   total_price: number
   status: string
   created_at: string
+  book_ids: string[] | null
+}
+
+export type Customer = {
+  user_id: string
+  email: string | null
+  full_name: string | null
+  phone: string | null
+  order_count: number
+  created_at: string
+  last_sign_in_at: string | null
 }

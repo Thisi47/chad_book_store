@@ -13,7 +13,7 @@ npm run dev
 
 ## Première configuration Supabase
 
-1. Exécuter `supabase/migrations/20261124150000_admin_console.sql` dans le SQL Editor Supabase.
+1. Exécuter d’abord `20261123160000_restore_user_features.sql`, puis dans l’ordre `20261124150000_admin_console.sql`, `20261124170000_admin_schema_introspection.sql` et `20261124180000_admin_operations.sql` depuis `supabase/migrations/` dans le SQL Editor Supabase.
 2. Créer un compte administrateur via Supabase Auth (ou inscrire le compte depuis le flux d’inscription existant).
 3. Dans le SQL Editor, ajouter ce compte à `public.admin_users` :
 
@@ -32,7 +32,10 @@ Les permissions d’administration sont contrôlées par RLS. Le navigateur n’
 - Tableau de bord avec nombre de livres, fichiers manquants et commandes récentes.
 - Création, modification et suppression des livres du catalogue.
 - Envoi de fichiers PDF, EPUB, TXT et Markdown vers le bucket privé `book-files`, puis association automatique au livre sélectionné.
-- Consultation des commandes récentes sans action sur le parcours d’achat.
+- Suivi des commandes, recherche et mise à jour de leur statut depuis l’administration.
+- Consultation des comptes clients, nombre de commandes, et modification du nom et du téléphone.
 - Interface responsive pour ordinateur, tablette et mobile.
+- Éditeur de livres généré depuis les colonnes live de `public.books` (type, nullabilité, défauts et clés étrangères). Les champs système et les champs ayant une valeur par défaut sont exclus du formulaire.
+- Explorateur des tables/relations retournés par PostgreSQL.
 
 Les fichiers de couverture restent des URLs externes pour conserver le schéma actuel de l’application mobile.
